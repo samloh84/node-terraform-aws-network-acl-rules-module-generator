@@ -1,0 +1,12 @@
+# https://www.terraform.io/docs/providers/aws/d/subnet.html
+data "aws_subnet" "{{ subnet_group_name }}" {
+    count = length(var.subnet_group_{{ subnet_group_name }}_subnet_ids)
+    id = var.subnet_group_{{ subnet_group_name }}_subnet_ids[count.index]
+}
+
+locals {
+    subnet_group_{{ subnet_group_name }}_cidr_blocks = data.aws_subnet.{{ subnet_group_name }}.*.cidr_block
+    {% if ipv6 %}
+    subnet_group_{{ subnet_group_name }}_ipv6_cidr_blocks = data.aws_subnet.{{ subnet_group_name }}.*.ipv6_cidr_block
+    {% endif %}
+}

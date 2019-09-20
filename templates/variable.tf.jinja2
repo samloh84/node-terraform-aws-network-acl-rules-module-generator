@@ -1,0 +1,38 @@
+{% if type == 'subnet_group' %}
+variable "subnet_group_{{ network_tier_name }}_subnet_ids" {
+    type = list(string)
+    description = "Subnet Group {{ network_tier_name }} Ids"
+    {% if subnet_ids -%}
+    default = [
+    "{{ subnet_ids | join('",\n"') }}"
+    ]
+    {%- endif %}
+}
+variable "subnet_group_{{ network_tier_name }}_network_acl_id" {
+    type = string
+    description = "Network ACL for Subnet Group {{ network_tier_name }}"
+    {% if network_acl_id -%}
+    default = "{{ network_acl_id }}"
+    {%- endif %}
+}
+{%- elif type == 'cidr_block' -%}
+variable "cidr_blocks_{{ network_tier_name }}" {
+    type = list(string)
+    description = "{{ network_tier_name }} CIDR Blocks"
+    {% if cidr_blocks -%}
+    default = [
+    "{{ cidr_blocks | join('",\n"') }}"
+    ]
+    {%- endif %}
+}
+{%- elif type == 'ipv6_cidr_block' -%}
+variable "ipv6_cidr_blocks_{{ network_tier_name }}" {
+    type = list(string)
+    description = "{{ network_tier_name }} IPV6 CIDR Blocks"
+    {% if ipv6_cidr_blocks -%}
+    default = [
+    "{{ ipv6_cidr_blocks | join('",\n"') }}"
+    ]
+    {%- endif %}
+}
+{%- endif %}

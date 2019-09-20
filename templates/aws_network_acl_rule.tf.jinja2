@@ -1,0 +1,32 @@
+locals {
+    {% if other_network_tier.type == 'cidr_block' -%}
+    {{ traffic_rule_name }}_cidr_blocks = var.cidr_blocks_{{ other_network_tier.name }}
+    {%- elif other_network_tier.type == 'ipv6_cidr_block' -%}
+    {{ traffic_rule_name }}_ipv6_cidr_block = var.ipv6_cidr_blocks_{{ other_network_tier.name }}
+    {%- elif other_network_tier.type == 'subnet_group' -%}
+    {{ traffic_rule_name }}_cidr_blocks = local.subnet_group_{{ other_network_tier.name }}_cidr_blocks
+    {%- elif other_network_tier.type == 'ipv6_subnet_group' -%}
+    {{ traffic_rule_name }}_cidr_blocks = local.subnet_group_{{ other_network_tier.name }}_ipv6_cidr_blocks
+    {%- endif %}
+}
+
+# https://www.terraform.io/docs/providers/aws/r/network_acl_rule.html
+resource "aws_network_acl_rule" "{{ traffic_rule_name }}" {
+
+    egress = {{ "true" if traffic_rule_type == "egress" else "false" }}
+    from_port = {{ from_port }}
+    to_port = {{ to_port }}
+    protocol = "{{ protocol }}"
+    rule_action = "allow"
+
+
+    count = length(local.{{ traffic_rule_name }}_cidr_blocks)
+    {% if other_network_tier.type == 'cidr_block' or other_network_tier.type == 'subnet_group' -%}
+    cidr_block = local.{{ traffic_rule_name }}_cidr_blocks[count.index]
+    {%- elif other_network_tier.type == 'ipv6_cidr_block' or other_network_tier.type == 'ipv6_subnet_group' -%}
+    ipv6_cidr_block = local.{{ traffic_rule_name }}_cidr_blocks[count.index]
+    {%- endif %}
+    rule_number = 100 {% for accumulated_cidr_block in accumulated_cidr_blocks %} + (length({{ accumulated_cidr_block }}) * 10){% endfor %} + (10 * count.index)
+
+    network_acl_id = var.subnet_group_{{ network_tier.name }}_network_acl_id
+}
